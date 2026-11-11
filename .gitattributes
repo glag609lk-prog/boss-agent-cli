@@ -10,3 +10,9 @@
 # picking either side (task state lives in task.json, not index.md). See
 # .trellis/spec/cli/backend/directory-structure.md for details.
 .trellis/workspace/*/journal-*.md merge=union
+
+# Windows installer scripts must keep CRLF. cmd.exe mishandles LF-only batches.
+packaging/windows/*.bat text eol=crlf
+packaging/windows/*.cmd text eol=crlf
+packaging/windows/*.ps1 text eol=crlf
+packaging/windows/使用说明.txt text eol=crlf

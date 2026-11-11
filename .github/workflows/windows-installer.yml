@@ -1,0 +1,56 @@
+name: Windows installer
+
+on:
+  push:
+    branches: [release/windows-installer]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-installer-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  build-and-verify:
+    name: Build and install
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Build installer zip
+        shell: pwsh
+        run: ./packaging/windows/build.ps1
+
+      - name: Upload installer zip
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: HRAssistant-windows
+          path: dist/HRAssistant-windows.zip
+          if-no-files-found: error
+
+      - name: Install from the zip and verify
+        shell: pwsh
+        run: ./packaging/windows/ci_verify.ps1
+
+      - name: Upload cookie probe
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: windows-cookie-probe
+          path: cookie-probe.txt
+          if-no-files-found: warn
